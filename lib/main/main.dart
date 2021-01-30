@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'To Do Application',
       home: ChangeNotifierProvider<MainModel>(
-        create: (_) => MainModel()..getTodoList(),
+        create: (_) => MainModel()..gettodoListRealTime(),
         child: Scaffold(
           appBar: AppBar(
             title: Text('TODO APP'),
