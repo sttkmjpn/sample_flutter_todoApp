@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:to_do_app/add/add_page.dart';
 import 'package:to_do_app/main/main_model.dart';
 
 void main() async {
@@ -12,32 +13,70 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'To Do Application',
-      home: ChangeNotifierProvider<MainModel>(
-        create: (_) => MainModel()..gettodoListRealTime(),
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('TODO APP'),
-          ),
-          body: Consumer<MainModel>(
-            builder: (context, model, child) {
-              final todoList = model.todoList;
-              return ListView(
+    return MaterialApp(title: 'To Do Application', home: MainPage());
+  }
+}
+
+class MainPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<MainModel>(
+      create: (_) => MainModel()..getTodoListRealTime(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('TODO APP'),
+          centerTitle: true,
+          backgroundColor: (Colors.blue),
+          actions: [
+            Consumer<MainModel>(builder: (context, model, child) {
+              final isActive = model.checkShouldActiveCompleteButton();
+              return FlatButton(
+                onPressed: isActive
+                    ? () async {
+                        await model.deleteCheckedItems();
+                      }
+                    : null,
+                child: Text('Done',
+                    style: TextStyle(
+                        color: isActive
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.5))),
+              );
+            }),
+          ],
+        ),
+        body: Consumer<MainModel>(
+          builder: (context, model, child) {
+            final todoList = model.todoList;
+            return ListView(
                 children: todoList
-                    .map((todo) => ListTile(
-                          title: Text(todo.title),
-                        ))
-                    .toList(),
+                    .map(
+                      (todo) => CheckboxListTile(
+                        title: Text(todo.title),
+                        value: todo.isDone,
+                        onChanged: (bool value) {
+                          todo.isDone = !todo.isDone;
+                          model.reload();
+                        },
+                      ),
+                    )
+                    .toList());
+          },
+        ),
+        floatingActionButton:
+            Consumer<MainModel>(builder: (context, model, child) {
+          return FloatingActionButton(
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddPage(model),
+                    fullscreenDialog: true),
               );
             },
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {},
-            tooltip: 'Increment',
             child: Icon(Icons.add),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
